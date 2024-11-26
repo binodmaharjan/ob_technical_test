@@ -19,7 +19,7 @@ export const initializeDatabase = async () => {
     await mongoose.connect(DATABASE_URI, {
       // Mongoose connection options can be specified here
     });
-    console.log('Connected to the database');
+    console.log('---Connected to the database---');
   } catch (error) {
     console.error('Database connection error:', error);
   }
