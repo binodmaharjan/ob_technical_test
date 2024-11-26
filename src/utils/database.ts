@@ -9,10 +9,10 @@
 
 // Example (from a different context):
 
-/*
+
 import mongoose from 'mongoose';
 
-const DATABASE_URI = process.env.DATABASE_URI || 'mongodb://localhost:27017/your_database';
+const DATABASE_URI = process.env.DATABASE_URI || 'mongodb://localhost:27017/myDb';
 
 export const initializeDatabase = async () => {
   try {
@@ -22,10 +22,17 @@ export const initializeDatabase = async () => {
     console.log('Connected to the database');
   } catch (error) {
     console.error('Database connection error:', error);
-    // Handle the error appropriately
   }
 };
-*/
+
+export const closeDatabase = async () => {
+  try {
+    await mongoose.disconnect();
+  } catch (error) {
+    console.error('Database disconnection error:', error);
+  }
+};
+
 
 // Note:
 // - Remember to call this initialization function before your application starts listening for requests.
