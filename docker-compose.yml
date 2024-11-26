@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   command: npm run dev
+  #   volumes:
+  #     - ./frontend:/app
+  #   ports:
+  #     - "5174:5174"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PORT=5174
+  #     - VITE_API_URL=http://localhost:8000
+
+  #   depends_on:
+  #     - app
+
   app:
     build: .
     command: npm run dev
@@ -8,9 +26,16 @@ services:
       - .:/usr/src/app
     ports:
       - "8000:8000"
+    
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - DATABASE_URI=mongodb://admin:password@mongo:27017/myDb?authSource=admin
+      - LLM_API_URL=http://host.docker.internal:8080/llm/generate
+
     depends_on:
       - wiremock
-      - db
+      - mongo
 
   wiremock:
     image: wiremock/wiremock:2.35.0
@@ -19,6 +44,42 @@ services:
     volumes:
       - ./wiremock:/home/wiremock
     command: --verbose
+  
+  mongo:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017" 
+    volumes:
+      - mongo_data:/data/db 
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    container_name: mongo_express
+    ports:
+      - "8081:8081" # Expose Mongo Express on localhost
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_SERVER: mongo
+    depends_on:
+      - mongo
+
+  test:
+    build: .
+    command: npm test
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URI=mongodb://admin:password@mongo:27017/testDb?authSource=admin
+      - LLM_API_URL=http://host.docker.internal:8080/llm/generate
+    depends_on:
+      - mongo
+      - wiremock
 
 volumes:
   mongo_data:
