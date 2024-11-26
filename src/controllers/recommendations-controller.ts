@@ -1,6 +1,10 @@
 // src/controllers/recommendationsController.ts
 
 import { Request, Response } from 'express';
+import { RecommendationPost } from '../types/recommendation';
+import { RecommendationModel } from '../models/recommendation';
+import axios from 'axios';
+import { LLM_API_URL } from '../utils/helpers';
 // import axios from 'axios';
 // import { OfferModel } from '../models/Offer';
 
@@ -9,16 +13,16 @@ export const generateOffers = async (req: Request, res: Response) => {
    * TODO: Implement this controller function.
    *
    * Steps:
-   * 1. Extract `clientId` and `productInterests` from the request body.
+   * 1. Extract `user_id` and `preferences` from the request body.
    * 2. Validate the input data.
-   *    - Ensure `clientId` is a non-empty string.
-   *    - Ensure `productInterests` is a non-empty array of non-empty strings.
-   * 3. Interact with an external API to get tailored promotions.
+   *    - Ensure `user_id` is a non-empty string.
+   *    - Ensure `preferences` is a non-empty array of non-empty strings.
+   * 3. Interact with an external API to get tailored recommendations.
    *    - Send a POST request to the external promotions API.
-   *    - Include the `productInterests` in the request payload.
+   *    - Include the `preferences` in the request payload.
    * 4. Save the promotions in the database.
-   *    - Use the `PromotionModel` to store data.
-   * 5. Return the promotions in the response.
+   *    - Use the `RecommendationModel` to store data.
+   * 5. Return the recommendations in the response.
    *
    * Handle exceptions and errors appropriately.
    *
@@ -28,27 +32,43 @@ export const generateOffers = async (req: Request, res: Response) => {
    * - Use try-catch blocks for error handling.
    */
 
-  // Example (from a different context):
-
-  /*
-  const { clientId, productInterests } = req.body;
-
-  try {
-    // Call the external promotions service
-    const apiResponse = await axios.post('http://external-api.com/promotions', { productInterests });
-    const { promotions } = apiResponse.data;
-
-    // Save to the database
-    const newPromotion = new PromotionModel({ clientId, promotions });
-    await newPromotion.save();
-
-    // Send the response
-    res.json({ clientId, promotions });
-  } catch (error) {
-    console.error('Error generating promotions:', error);
-    res.status(500).json({
-      error: 'Unable to generate promotions at this time. Please try again later.',
-    });
-  }
-  */
+  // Extract the user_id and preferences from the request body
 };
+
+
+export const postRecommendations = async (req: Request, res: Response) => {
+
+  const { user_id, preferences } = req.body as RecommendationPost;
+
+  // check if LLM_API_URL is defined in the environment variables
+   if (!process.env.LLM_API_URL) {
+     return res.status(500).json({ error: 'LLM_API_URL is not defined in the environment variables' });
+   }
+   const response = await axios.post(process.env.LLM_API_URL, { preferences });
+   const recommendations:string[] = response?.data?.recommendations || [];
+
+ //check existing recommendations
+  const existingRecommendations = await RecommendationModel.find({ user_id });
+  if(existingRecommendations.length > 0) {
+    //delete existing recommendations
+    await RecommendationModel.deleteMany({ user_id });  
+  }
+
+    // Save each recommendation
+    const recommendationPromises = recommendations.map((preference: string) => {
+      const recommendation = new RecommendationModel({
+        user_id,
+        suggestion: preference,
+      });
+      return recommendation.save();
+    });
+
+    // Wait for all recommendations to be saved
+    await Promise.all(recommendationPromises);
+    res.status(201).json({ message: 'Recommendations saved successfully' });
+    return;
+
+}
+
+
+  
