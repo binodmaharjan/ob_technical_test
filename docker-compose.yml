@@ -2,37 +2,38 @@ version: '3.8'
 
 services:
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   command: npm run dev
-  #   volumes:
-  #     - ./frontend:/app
-  #   ports:
-  #     - "5174:5174"
-  #   environment:
-  #     - NODE_ENV=development
-  #     - PORT=5174
-  #     - VITE_API_URL=http://localhost:8000
-
-  #   depends_on:
-  #     - app
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev -- --host
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - PORT=5173
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - app
 
   app:
-    build: .
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     command: npm run dev
     volumes:
-      - .:/usr/src/app
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
     ports:
       - "8000:8000"
-    
     environment:
       - NODE_ENV=development
       - PORT=8000
       - DATABASE_URI=mongodb://admin:password@mongo:27017/myDb?authSource=admin
       - LLM_API_URL=http://host.docker.internal:8080/llm/generate
-
     depends_on:
       - wiremock
       - mongo
@@ -68,18 +69,18 @@ services:
     depends_on:
       - mongo
 
-  test:
-    build: .
-    command: npm test
-    volumes:
-      - .:/app
-    environment:
-      - NODE_ENV=test
-      - DATABASE_URI=mongodb://admin:password@mongo:27017/testDb?authSource=admin
-      - LLM_API_URL=http://host.docker.internal:8080/llm/generate
-    depends_on:
-      - mongo
-      - wiremock
+  # test:
+  #   build: .
+  #   command: npm test
+  #   volumes:
+  #     - .:/app
+  #   environment:
+  #     - NODE_ENV=test
+  #     - DATABASE_URI=mongodb://admin:password@mongo:27017/testDb?authSource=admin
+  #     - LLM_API_URL=http://host.docker.internal:8080/llm/generate
+  #   depends_on:
+  #     - mongo
+  #     - wiremock
 
 volumes:
   mongo_data:
