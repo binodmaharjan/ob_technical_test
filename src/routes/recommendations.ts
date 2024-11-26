@@ -1,6 +1,9 @@
 // src/routes/recommendations.ts
 
 import { Router } from 'express';
+import { postRecommendations } from '../controllers/recommendations-controller';
+import { formValidate } from '../middleware/formvalidate';
+import { createRecommendationScheme } from '../validators/recommendations.validator';
 // import { generateRecommendations } from '../controllers/recommendationsController';
 // import { validateRecommendations } from '../utils/schemas';
 // import { validationResult } from 'express-validator';
@@ -20,16 +23,7 @@ const router = Router();
  * - Use `validationResult` to check for validation errors.
  */
 
- // Example (from a different context):
 
- /*
- router.post('/', validatePostCreation, (req, res) => {
-   const errors = validationResult(req);
-   if (!errors.isEmpty()) {
-     return res.status(400).json({ errors: errors.array() });
-   }
-   generateRecommendations(req, res);
- });
- */
+ router.post('/', createRecommendationScheme, formValidate, postRecommendations)
 
 export default router;
