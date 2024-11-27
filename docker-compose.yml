@@ -69,18 +69,20 @@ services:
     depends_on:
       - mongo
 
-  # test:
-  #   build: .
-  #   command: npm test
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     - NODE_ENV=test
-  #     - DATABASE_URI=mongodb://admin:password@mongo:27017/testDb?authSource=admin
-  #     - LLM_API_URL=http://host.docker.internal:8080/llm/generate
-  #   depends_on:
-  #     - mongo
-  #     - wiremock
+  test:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    command: npm run test
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URI=mongodb://admin:password@mongo:27017/testDb?authSource=admin
+      - LLM_API_URL=http://host.docker.internal:8080/llm/generate
+    depends_on:
+      - mongo
+      - wiremock
 
 volumes:
   mongo_data:
