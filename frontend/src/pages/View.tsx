@@ -12,10 +12,9 @@ function Views() {
             <Route path="/" element={<RootLayout />}>
               <Route path="/" element={<MainPage />} />
               <Route path="/interests" element={<InterestPage />} />
-
             </Route>
             <Route path="/docs" element={<LLMMockPage />} />
-            <Route path="*" element={<LLMMockPage />} />
+            <Route path="*" element={<MainPage />} />
         </Routes>
 
   )

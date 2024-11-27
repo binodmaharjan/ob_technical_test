@@ -13,7 +13,7 @@ import { useSnackbar } from "notistack";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 
-type RecommendationPostData= {
+type RecommendationPostData = {
     user_id: string;
     preferences?: string[];
 }
@@ -25,14 +25,14 @@ const formSchema = z.object({
 const interestSchema = z.object({
     id: z.string(), // The `id` must be a string
     value: z.string().min(1).max(50), // The `value` must be a string
-  });
-  
-const interestsSchema = z.array(interestSchema); 
+});
+
+const interestsSchema = z.array(interestSchema);
 
 function MainPage() {
-    const [response, setResponse] = React.useState<any>(null);
+
     const [interests, setInterests] = React.useState([{ id: `${Date.now()}`, value: "" }]);
-    const [errors, setErrors] = React.useState<{ [key: string]: string }>({}); // Errors per interest ID
+    const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
 
     const { enqueueSnackbar } = useSnackbar();
 
@@ -57,35 +57,32 @@ function MainPage() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-          user_id: "",
+            user_id: "",
 
         },
-      })
+    })
 
-        // Validate all interests
-  const validateInterests = () => {
-    const result = interestsSchema.safeParse(interests);
-    if (!result.success) {
-      const fieldErrors = result.error.issues.reduce((acc, issue) => {
-        const index = issue.path[0]; // Index of the interest
-        const id = interests[index as number ].id;
-        acc[id] = issue.message;
-        return acc;
-      }, {} as { [key: string]: string });
-      setErrors(fieldErrors);
-      return false; // Validation failed
-    }
-    return true; // Validation passed
-  };
-
-
-    // const form = useForm();
+    // Validate all preferences
+    const validateInterests = () => {
+        const result = interestsSchema.safeParse(interests);
+        if (!result.success) {
+            const fieldErrors = result.error.issues.reduce((acc, issue) => {
+                const index = issue.path[0]; // Index of the preferences
+                const id = interests[index as number].id;
+                acc[id] = issue.message;
+                return acc;
+            }, {} as { [key: string]: string });
+            setErrors(fieldErrors);
+            return false; // Validation failed
+        }
+        return true; // Validation passed
+    };
 
     const onSubmit = async (data: RecommendationPostData) => {
 
-        if(!validateInterests())
+        if (!validateInterests())
             return;
-        const formData:RecommendationPostData = {
+        const formData: RecommendationPostData = {
             user_id: data.user_id,
             preferences: interests.map((interest) => interest.value),
         };
@@ -99,7 +96,7 @@ function MainPage() {
         } catch (err) {
             console.log(err);
             if (axios.isAxiosError(err)) {
-                enqueueSnackbar( err.response?.data?.error || "Error getting recommendations", { variant: "error" });
+                enqueueSnackbar(err.response?.data?.error || "Error getting recommendations", { variant: "error" });
             }
         }
     };
@@ -131,14 +128,14 @@ function MainPage() {
                         <div className="flex flex-col gap-y-3 w-full    ">
                             {interests.map((interest, index) => (
                                 <div key={interest.id} className="flex flex-row gap-x-1 items-center">
-                                   
+
                                     <FormField
                                         control={form.control}
                                         name={`body-${interest.id}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full">
                                                 <div className="flex flex-row gap-1 items-center">
-                                                 {<FaMinus onClick={() => removeInterest(interest.id)}  className={`${index === 0 ? 'invisible' : ''}`}/>}
+                                                    {<FaMinus onClick={() => removeInterest(interest.id)} className={`${index === 0 ? 'invisible' : ''}`} />}
                                                     <FormControl>
                                                         <Input    {...field} placeholder="" value={interest.value}
                                                             onChange={(e) =>
@@ -146,7 +143,7 @@ function MainPage() {
                                                             } />
                                                     </FormControl>
                                                 </div>
-                                                
+
                                                 {errors[interest.id] && (
                                                     <FormMessage className="ml-10">{errors[interest.id]}</FormMessage>
                                                 )}
@@ -162,13 +159,9 @@ function MainPage() {
                             </div>
                         </div>
                     </div>
-
-                
-                        <Button className="w-full" type="submit">Submit</Button>
-                 
+                    <Button className="w-full" type="submit">Submit</Button>
                 </form>
             </Form>
-
         </div>
     );
 }

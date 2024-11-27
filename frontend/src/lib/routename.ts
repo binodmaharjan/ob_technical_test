@@ -1,4 +1,3 @@
-// /Users/binodmaharjan/Documents/GitHubProjects/paige/technical_test_js/frontend/src/lib/routename.ts
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

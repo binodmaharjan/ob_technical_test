@@ -26,11 +26,8 @@ function InterestPage() {
     const onSubmit = async (data: any) => {
 
         setRecommendations([]);
-        
         try {
-            
             const response = await axios.get(ROUTE_NAME.getRecomended(data.user_id));
-            console.log("reposne se from ", response.data);
             if(response.data.recommendations && response.data.recommendations.length > 0){
                 setRecommendations(response.data.recommendations);
             }
@@ -65,17 +62,13 @@ function InterestPage() {
                         />
                         <Button className="w-ful" type="submit">GET</Button>
                     </div>
-                    
-
-                   
                 </form>
             </Form>
-
-                {
-                    recommendations.map((recommendation, index) => (
-                        <Label className = " p-2 border text-center rounded-lg"key={index}>{recommendation}</Label>
-                    ))
-                }
+            {
+                recommendations.map((recommendation, index) => (
+                    <Label className = " p-2 border text-center rounded-lg"key={index}>{recommendation}</Label>
+                ))
+            }
 
 
         </div>

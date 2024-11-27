@@ -26,11 +26,8 @@ const RootLayout = () => {
         </div>
 
         <div className={` flex border rounded-lg m-5 hidden sm:block `}>
-
           <Sidebar />
         </div>
-
-
         <div className="">
           <Outlet />
         </div>
