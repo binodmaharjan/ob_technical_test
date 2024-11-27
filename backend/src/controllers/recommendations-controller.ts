@@ -41,18 +41,21 @@ export const postRecommendations = async (req: Request, res: Response) => {
   const { user_id, preferences } = req.body as RecommendationPost;
 
   // check if LLM_API_URL is defined in the environment variables
-   if (!process.env.LLM_API_URL) {
-     return res.status(500).json({ error: 'LLM_API_URL is not defined in the environment variables' });
-   }
-   const response = await axios.post(process.env.LLM_API_URL, { preferences });
-   const recommendations:string[] = response?.data?.recommendations || [];
-
- //check existing recommendations
-  const existingRecommendations = await RecommendationModel.find({ user_id });
-  if(existingRecommendations.length > 0) {
-    //delete existing recommendations
-    await RecommendationModel.deleteMany({ user_id });  
+  if (!process.env.LLM_API_URL) {
+    res.status(500).json({ error: 'LLM_API_URL is not defined in the environment variables' });
+    return;
   }
+
+  try {
+    const response = await axios.post(process.env.LLM_API_URL, { preferences });
+    const recommendations: string[] = response?.data?.recommendations || [];
+
+    //check existing recommendations
+    const existingRecommendations = await RecommendationModel.find({ user_id });
+    if (existingRecommendations.length > 0) {
+      //delete existing recommendations
+      await RecommendationModel.deleteMany({ user_id });
+    }
 
     // Save each recommendation
     const recommendationPromises = recommendations.map((preference: string) => {
@@ -68,7 +71,13 @@ export const postRecommendations = async (req: Request, res: Response) => {
     res.status(201).json({ message: 'Recommendations saved successfully' });
     return;
 
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Unable to saved recommendations. Only preferences accepting right now by wiremock: ["science fiction", "artificial intelligence", "space exploration"]' });
+
+  }
+
+
 }
 
 
-  
