@@ -11,22 +11,7 @@ import { z } from "zod"
 import { useSnackbar } from "notistack";
 
 
-const formSchema = z.object({
-    method: z.string().min(2).max(50),
-    url: z.string().url(),
-    body: z.union([
-        z.string().min(1).refine((value) => {
-            try {
-                JSON.parse(value);
-                return true;
-            } catch {
-                return false;
-            }
-        }, { message: "Body must be a valid JSON string." }),
-        z.string().length(0), // Allow an empty string
 
-    ]),
-})
 
 function InterestPage() {
     

@@ -12,30 +12,46 @@ import { FaMinus } from "react-icons/fa";
 import { useSnackbar } from "notistack";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+
+type RecommendationPostData= {
+    user_id: string;
+    preferences?: string[];
+}
+
 const formSchema = z.object({
     user_id: z.string().min(1).max(50),
 })
 
+const interestSchema = z.object({
+    id: z.string(), // The `id` must be a string
+    value: z.string().min(1).max(50), // The `value` must be a string
+  });
+  
+const interestsSchema = z.array(interestSchema); 
+
 function MainPage() {
     const [response, setResponse] = React.useState<any>(null);
+    const [interests, setInterests] = React.useState([{ id: `${Date.now()}`, value: "" }]);
+    const [errors, setErrors] = React.useState<{ [key: string]: string }>({}); // Errors per interest ID
 
-    const [interests, setInterests] = React.useState([{ id: Date.now(), value: "" }]);
     const { enqueueSnackbar } = useSnackbar();
 
     // Add a new input field
     const addInterest = () => {
-        setInterests([...interests, { id: Date.now(), value: "" }]);
+        setInterests([...interests, { id: `${Date.now()}`, value: "" }]);
     };
 
     // Remove an input field
-    const removeInterest = (id: number) => {
+    const removeInterest = (id: string) => {
         setInterests(interests.filter((input) => input.id !== id));
     };
 
-    const handleInputChange = (id: number, value: string) => {
+    const handleInputChange = (id: string, value: string) => {
         setInterests(
             interests.map((input) => (input.id === id ? { ...input, value } : input))
         );
+        setErrors((prev) => ({ ...prev, [id]: "" })); // Clear error for the field
+
     };
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -46,10 +62,30 @@ function MainPage() {
         },
       })
 
+        // Validate all interests
+  const validateInterests = () => {
+    const result = interestsSchema.safeParse(interests);
+    if (!result.success) {
+      const fieldErrors = result.error.issues.reduce((acc, issue) => {
+        const index = issue.path[0]; // Index of the interest
+        const id = interests[index as number ].id;
+        acc[id] = issue.message;
+        return acc;
+      }, {} as { [key: string]: string });
+      setErrors(fieldErrors);
+      return false; // Validation failed
+    }
+    return true; // Validation passed
+  };
+
+
     // const form = useForm();
 
-    const onSubmit = async (data: any) => {
-        const formData = {
+    const onSubmit = async (data: RecommendationPostData) => {
+
+        if(!validateInterests())
+            return;
+        const formData:RecommendationPostData = {
             user_id: data.user_id,
             preferences: interests.map((interest) => interest.value),
         };
@@ -58,7 +94,7 @@ function MainPage() {
 
             const response = await axios.post(ROUTE_NAME.postRecommendations, formData);
             enqueueSnackbar(response.data.message || "Recommendations created", { variant: "success" });
-            setInterests([{ id: Date.now(), value: "" }]);
+            setInterests([{ id: `${Date.now()}`, value: "" }]);
 
         } catch (err) {
             console.log(err);
@@ -82,7 +118,7 @@ function MainPage() {
                             render={({ field }) => (
                                 <FormItem className="w-full">
                                     <FormControl>
-                                        <Input    {...field} placeholder="...." type="number" />
+                                        <Input    {...field} placeholder="" type="number" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -95,27 +131,31 @@ function MainPage() {
                         <div className="flex flex-col gap-y-3 w-full    ">
                             {interests.map((interest, index) => (
                                 <div key={interest.id} className="flex flex-row gap-x-1 items-center">
-                                    {<FaMinus onClick={() => removeInterest(interest.id)}  className={`${index === 0 ? 'invisible' : ''}`}/>}
+                                   
                                     <FormField
                                         control={form.control}
                                         name={`body-${interest.id}`}
                                         render={({ field }) => (
                                             <FormItem className="w-full">
-                                                <FormControl>
-                                                    <Input    {...field} placeholder="" value={interest.value}
-                                                        onChange={(e) =>
-                                                            handleInputChange(interest.id, e.target.value)
-                                                        } />
-                                                </FormControl>
-                                                <FormMessage />
+                                                <div className="flex flex-row gap-1 items-center">
+                                                 {<FaMinus onClick={() => removeInterest(interest.id)}  className={`${index === 0 ? 'invisible' : ''}`}/>}
+                                                    <FormControl>
+                                                        <Input    {...field} placeholder="" value={interest.value}
+                                                            onChange={(e) =>
+                                                                handleInputChange(interest.id, e.target.value)
+                                                            } />
+                                                    </FormControl>
+                                                </div>
+                                                
+                                                {errors[interest.id] && (
+                                                    <FormMessage className="ml-10">{errors[interest.id]}</FormMessage>
+                                                )}
                                             </FormItem>
                                         )}
                                     />
 
                                 </div>
                             ))}
-
-
 
                             <div className="flex flex-row gap-1 text-center items-center">
                                 <FaPlus onClick={addInterest} />
