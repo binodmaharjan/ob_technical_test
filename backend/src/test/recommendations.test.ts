@@ -1,6 +1,10 @@
 import request from 'supertest';
 import app from '../app';
 import { closeDatabase, initializeDatabase } from '../utils/database';
+import axios from 'axios';
+
+jest.mock('axios'); // Mock axios
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 /**
  * 
@@ -16,10 +20,31 @@ import { closeDatabase, initializeDatabase } from '../utils/database';
 beforeAll(async () => {
   // open the db connection before the tests
   initializeDatabase();
+
+  mockedAxios.post.mockResolvedValueOnce({
+    data: {
+      recommendations: [
+        "Book: 'Dune' by Frank Herbert",
+        "Article: 'The Future of AI in Space Travel'",
+        "Movie: 'Interstellar'"
+      ], // Mocked recommendations
+    },
+  });
 })
 
 describe('POST /recommendations', () => {
   it('should create recommendation for user', async () => {
+
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        recommendations: [
+          "Book: 'Dune' by Frank Herbert",
+          "Article: 'The Future of AI in Space Travel'",
+          "Movie: 'Interstellar'"
+        ], // Mocked recommendations
+      },
+    });
+
     const res = await request(app)
       .post('/recommendations')
       .send({
@@ -33,6 +58,7 @@ describe('POST /recommendations', () => {
   }, 10000);
 
   it('should return 400 if user_id is missing', async () => {
+
     const res = await request(app)
       .post('/recommendations')
       .send({
@@ -56,8 +82,6 @@ describe('POST /recommendations', () => {
     expect(res.body.errors.length).toBeGreaterThan(0);
     expect(res.body.errors[0].msg).toBe('Preferences must be a non-empty array');
   });
-
-  
 });
 
 
